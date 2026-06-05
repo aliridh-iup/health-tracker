@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Tracker — Kalori & Risiko Diabetes</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
+  .header { background: #fff; border-bottom: 1px solid #e5e5e5; padding: 14px 20px; display: flex; align-items: center; gap: 10px; }
+  .header-icon { width: 32px; height: 32px; background: #1a1a1a; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .header-icon svg { width: 18px; height: 18px; stroke: #fff; fill: none; }
+  .header h1 { font-size: 16px; font-weight: 600; }
+  .header p { font-size: 12px; color: #888; }
+  .container { max-width: 680px; margin: 0 auto; padding: 20px 16px; }
+  .tabs { display: flex; gap: 4px; background: #ececec; border-radius: 10px; padding: 4px; margin-bottom: 20px; }
+  .tab { flex: 1; padding: 8px 4px; border: none; background: transparent; border-radius: 7px; font-size: 13px; cursor: pointer; color: #666; font-family: inherit; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  .tab.active { background: #fff; color: #1a1a1a; font-weight: 500; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .section { display: none; }
+  .section.active { display: block; }
+  .card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+  .card-title { font-size: 13px; font-weight: 500; color: #666; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .field label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
+  .field input, .field select { width: 100%; padding: 8px 10px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; background: #fafafa; outline: none; transition: border-color 0.15s; }
+  .field input:focus, .field select:focus { border-color: #1a1a1a; background: #fff; }
+  .btn { width: 100%; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; margin-top: 4px; transition: all 0.15s; }
+  .btn-primary { background: #1a1a1a; color: #fff; border: none; }
+  .btn-primary:hover { background: #333; }
+  .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .metric { background: #f5f5f5; border-radius: 10px; padding: 12px; text-align: center; }
+  .metric-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .metric-val { font-size: 22px; font-weight: 600; color: #1a1a1a; }
+  .metric-unit { font-size: 10px; color: #aaa; }
+  .food-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+  .food-item:last-child { border-bottom: none; }
+  .food-del { border: none; background: none; cursor: pointer; color: #ccc; font-size: 18px; line-height: 1; padding: 0 4px; }
+  .food-del:hover { color: #999; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+  .badge-normal { background: #e8f5e9; color: #2e7d32; }
+  .badge-warning { background: #fff8e1; color: #f57f17; }
+  .badge-danger { background: #fce4ec; color: #c62828; }
+  .progress-wrap { margin: 12px 0; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 6px; }
+  .progress-bar { height: 8px; background: #f0f0f0; border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; transition: width 0.4s; }
+  .separator { height: 1px; background: #f0f0f0; margin: 12px 0; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 13px; cursor: pointer; }
+  .checkbox-row input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; accent-color: #1a1a1a; }
+  .gula-card { padding: 10px 12px; border-radius: 8px; border: 1px solid #e8e8e8; margin-bottom: 8px; }
+  .gula-cat { font-size: 11px; color: #888; margin-bottom: 2px; }
+  .gula-range { font-size: 14px; font-weight: 500; }
+  .gula-status { font-size: 11px; margin-top: 2px; }
+  .risk-result { text-align: center; padding: 1.5rem 1rem; }
+  .risk-score { font-size: 52px; font-weight: 700; margin: 8px 0; }
+  .tip { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; font-size: 13px; color: #555; }
+  .edu-item { padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+  .edu-item:last-child { border-bottom: none; }
+  .edu-q { font-size: 13px; font-weight: 500; color: #1a1a1a; margin-bottom: 4px; }
+  .edu-a { font-size: 13px; color: #666; line-height: 1.6; }
+  .empty { font-size: 13px; color: #bbb; text-align: center; padding: 16px 0; }
+  .footer { text-align: center; font-size: 11px; color: #bbb; padding: 24px 0 8px; }
+  @media (max-width: 480px) { .row { grid-template-columns: 1fr; } .row3 { grid-template-columns: 1fr 1fr; } .metric-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">
+    <svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 8v4l3 3"/></svg>
+  </div>
+  <div>
+    <h1>Health Tracker</h1>
+    <p>Kalori harian & deteksi risiko diabetes</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('kalori', this)">🥗 Kalori</button>
+    <button class="tab" onclick="switchTab('diabetes', this)">📊 Risiko Diabetes</button>
+    <button class="tab" onclick="switchTab('edukasi', this)">📖 Edukasi</button>
+  </div>
+
+  <!-- KALORI -->
+  <div id="tab-kalori" class="section active">
+    <div class="card">
+      <div class="card-title">👤 Profil & kebutuhan kalori harian</div>
+      <div class="row">
+        <div class="field"><label>Berat badan (kg)</label><input type="number" id="bb" value="65" min="30" max="200" oninput="hitungKebutuhan()"></div>
+        <div class="field"><label>Tinggi badan (cm)</label><input type="number" id="tb" value="165" min="100" max="250" oninput="hitungKebutuhan()"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Usia (tahun)</label><input type="number" id="usia" value="30" min="10" max="100" oninput="hitungKebutuhan()"></div>
+        <div class="field"><label>Jenis kelamin</label>
+          <select id="jk" onchange="hitungKebutuhan()">
+            <option value="pria">Pria</option>
+            <option value="wanita">Wanita</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Tingkat aktivitas</label>
+        <select id="aktivitas" onchange="hitungKebutuhan()">
+          <option value="1.2">Sedentari (tidak banyak gerak)</option>
+          <option value="1.375">Ringan (olahraga 1–3x seminggu)</option>
+          <option value="1.55" selected>Moderat (olahraga 3–5x seminggu)</option>
+          <option value="1.725">Aktif (olahraga 6–7x seminggu)</option>
+          <option value="1.9">Sangat aktif (kerja fisik berat)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric"><div class="metric-label">Kebutuhan kalori</div><div class="metric-val" id="m-tdee">2.318</div><div class="metric-unit">kkal/hari</div></div>
+      <div class="metric"><div class="metric-label">Total dikonsumsi</div><div class="metric-val" id="m-total">0</div><div class="metric-unit">kkal</div></div>
+      <div class="metric"><div class="metric-label">Sisa kalori</div><div class="metric-val" id="m-sisa">2.318</div><div class="metric-unit">kkal</div></div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Progres kalori harian</span><span id="pct-label">0%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="kal-progress" style="width:0%;background:#4caf50;"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">➕ Tambah makanan</div>
+      <div class="row">
+        <div class="field"><label>Nama makanan</label><input type="text" id="nama-makanan" placeholder="cth: Nasi putih 1 piring"></div>
+        <div class="field"><label>Kalori (kkal)</label><input type="number" id="kal-makanan" placeholder="cth: 250" min="0"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Karbohidrat (g)</label><input type="number" id="karbo" placeholder="opsional" min="0"></div>
+        <div class="field"><label>Gula (g)</label><input type="number" id="gula-makanan" placeholder="opsional" min="0"></div>
+      </div>
+      <button class="btn btn-primary" onclick="tambahMakanan()">+ Tambah Makanan</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 Makanan hari ini</div>
+      <div id="food-list"><div class="empty">Belum ada makanan ditambahkan</div></div>
+      <div class="separator"></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;">
+        <span style="color:#888;">Total gula dikonsumsi:</span>
+        <span id="total-gula" style="font-weight:500;">0 g</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px;">
+        <span style="color:#aaa;">Batas gula harian WHO: maks. 25–50 g</span>
+        <span id="status-gula" class="badge badge-normal">Aman</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RISIKO DIABETES -->
+  <div id="tab-diabetes" class="section">
+    <div class="card">
+      <div class="card-title">🩸 Data gula darah</div>
+      <div class="row">
+        <div class="field"><label>Gula darah puasa / GDP (mg/dL)</label><input type="number" id="gdp" placeholder="cth: 95" min="50" max="500"></div>
+        <div class="field"><label>Gula darah 2 jam pp / GD2PP (mg/dL)</label><input type="number" id="gd2pp" placeholder="cth: 130" min="50" max="600"></div>
+      </div>
+      <div class="row" style="margin-bottom:0;">
+        <div class="gula-card"><div class="gula-cat">GDP — Normal</div><div class="gula-range" style="color:#2e7d32;">&lt; 100 mg/dL</div><div class="gula-status" style="color:#f57f17;">Pre-diabetes: 100–125</div></div>
+        <div class="gula-card"><div class="gula-cat">GD2PP — Normal</div><div class="gula-range" style="color:#2e7d32;">&lt; 140 mg/dL</div><div class="gula-status" style="color:#f57f17;">Pre-diabetes: 140–199</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📏 Data fisik</div>
+      <div class="row3">
+        <div class="field"><label>Berat (kg)</label><input type="number" id="r-bb" placeholder="65" oninput="hitungBMI()"></div>
+        <div class="field"><label>Tinggi (cm)</label><input type="number" id="r-tb" placeholder="165" oninput="hitungBMI()"></div>
+        <div class="field"><label>BMI</label><input type="text" id="r-bmi" placeholder="—" readonly style="background:#f0f0f0;"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Usia</label><input type="number" id="r-usia" placeholder="30" min="10" max="100"></div>
+        <div class="field"><label>Jenis kelamin</label><select id="r-jk"><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">❤️ Gejala & riwayat</div>
+      <label class="checkbox-row"><input type="checkbox" id="g1"> Sering haus berlebihan</label>
+      <label class="checkbox-row"><input type="checkbox" id="g2"> Sering buang air kecil (terutama malam)</label>
+      <label class="checkbox-row"><input type="checkbox" id="g3"> Mudah lapar meski sudah makan</label>
+      <label class="checkbox-row"><input type="checkbox" id="g4"> Mudah lelah / lemas tanpa sebab</label>
+      <label class="checkbox-row"><input type="checkbox" id="g5"> Pandangan kabur</label>
+      <label class="checkbox-row"><input type="checkbox" id="g6"> Luka lambat sembuh</label>
+      <label class="checkbox-row"><input type="checkbox" id="g7"> Kesemutan di tangan / kaki</label>
+      <div class="separator"></div>
+      <label class="checkbox-row"><input type="checkbox" id="r1"> Ada anggota keluarga kandung penderita diabetes</label>
+      <label class="checkbox-row"><input type="checkbox" id="r2"> Riwayat diabetes gestasional</label>
+      <label class="checkbox-row"><input type="checkbox" id="r3"> Jarang berolahraga (&lt; 1x seminggu)</label>
+      <label class="checkbox-row"><input type="checkbox" id="r4"> Konsumsi makanan/minuman manis sangat sering</label>
+    </div>
+
+    <button class="btn btn-primary" onclick="hitungRisiko()" style="margin-bottom:14px;">Hitung Risiko Saya</button>
+
+    <div class="card" id="hasil-risiko" style="display:none;">
+      <div class="risk-result">
+        <div id="r-icon" style="font-size:40px;"></div>
+        <div class="risk-score" id="r-skor">—</div>
+        <div style="font-size:15px;font-weight:500;" id="r-label">—</div>
+        <div style="margin-top:6px;"><span class="badge" id="r-badge">—</span></div>
+        <div id="r-tips" style="margin-top:16px;text-align:left;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDUKASI -->
+  <div id="tab-edukasi" class="section">
+    <div class="card">
+      <div class="card-title">🩸 Kadar gula darah ideal</div>
+      <div class="gula-card"><div class="gula-cat">Gula Darah Puasa (GDP) — pagi sebelum makan</div><div class="gula-range" style="color:#2e7d32;">Normal: 70–99 mg/dL</div><div class="gula-status" style="color:#f57f17;">Pre-diabetes: 100–125 mg/dL</div><div class="gula-status" style="color:#c62828;">Diabetes: ≥ 126 mg/dL</div></div>
+      <div class="gula-card"><div class="gula-cat">GD2PP — 2 jam setelah makan</div><div class="gula-range" style="color:#2e7d32;">Normal: &lt; 140 mg/dL</div><div class="gula-status" style="color:#f57f17;">Pre-diabetes: 140–199 mg/dL</div><div class="gula-status" style="color:#c62828;">Diabetes: ≥ 200 mg/dL</div></div>
+      <div class="gula-card" style="margin-bottom:0;"><div class="gula-cat">HbA1c — rata-rata 3 bulan</div><div class="gula-range" style="color:#2e7d32;">Normal: &lt; 5.7%</div><div class="gula-status" style="color:#f57f17;">Pre-diabetes: 5.7–6.4%</div><div class="gula-status" style="color:#c62828;">Diabetes: ≥ 6.5%</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🍬 Batas gula harian</div>
+      <div class="edu-item"><div class="edu-q">Berapa gram gula yang boleh dikonsumsi per hari?</div><div class="edu-a">WHO merekomendasikan maksimal <strong>25 gram</strong> (setara 6 sendok teh) untuk orang dewasa sehat. Toleransi atas hingga 50 gram. Penderita pre-diabetes sebaiknya di bawah 25 gram.</div></div>
+      <div class="edu-item"><div class="edu-q">Gula tersembunyi di mana saja?</div><div class="edu-a">Minuman kemasan, saus botolan, roti tawar, sereal, yogurt rasa, kecap, bahkan minuman "jus buah" mengandung gula tinggi meski tidak terasa manis.</div></div>
+      <div class="edu-item"><div class="edu-q">Kenapa gula berlebih berbahaya?</div><div class="edu-a">Konsumsi gula berlebih memicu lonjakan insulin berulang, menyebabkan resistensi insulin, menumpuk lemak visceral, dan meningkatkan risiko diabetes tipe 2, penyakit jantung, serta NAFLD.</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💡 Fakta penting diabetes</div>
+      <div class="edu-item"><div class="edu-q">Apa perbedaan pre-diabetes dan diabetes?</div><div class="edu-a">Pre-diabetes adalah kondisi gula darah di atas normal tapi belum memenuhi kriteria diabetes. Ini fase krusial — dengan perubahan gaya hidup, pre-diabetes BISA dibalik. Diabetes tipe 2 biasanya sudah permanen dan butuh pengelolaan jangka panjang.</div></div>
+      <div class="edu-item"><div class="edu-q">Apakah orang kurus bisa kena diabetes?</div><div class="edu-a">Ya. Orang Asia (termasuk Indonesia) lebih rentan diabetes meski BMI normal, karena faktor genetik dan distribusi lemak visceral yang berbeda dari populasi Barat.</div></div>
+      <div class="edu-item"><div class="edu-q">Kapan harus cek gula darah?</div><div class="edu-a">Setidaknya 1x setahun jika punya faktor risiko (gemuk, ada riwayat keluarga, usia &gt; 35 tahun). Jika ada gejala seperti sering haus, sering kencing, lemas — segera cek ke klinik atau puskesmas.</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏃 Tips praktis sehari-hari</div>
+      <div class="tip">✅ <span>Jalan kaki 30 menit sehari sudah cukup untuk menurunkan risiko diabetes hingga 30%</span></div>
+      <div class="tip">✅ <span>Makan dengan urutan: sayur dulu → protein → karbohidrat — membantu memperlambat kenaikan gula darah</span></div>
+      <div class="tip">✅ <span>Tidur cukup 7–8 jam. Kurang tidur meningkatkan hormon kortisol yang menaikkan gula darah</span></div>
+      <div class="tip">✅ <span>Ganti minuman manis dengan air putih, teh tanpa gula, atau infused water</span></div>
+      <div class="tip">❌ <span>Hindari boba, jus kemasan, atau kopi kekinian setiap hari — satu porsi bisa mengandung 50–80 g gula</span></div>
+    </div>
+  </div>
+
+  <div class="footer">⚠️ Alat ini bersifat edukatif, bukan pengganti diagnosis dokter. Konsultasikan kondisi kesehatanmu ke tenaga medis.</div>
+</div>
+
+<script>
+let foods = [];
+let tdee = 2318;
+
+function switchTab(t, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + t).classList.add('active');
+  btn.classList.add('active');
+}
+
+function hitungKebutuhan() {
+  const bb = parseFloat(document.getElementById('bb').value) || 65;
+  const tb = parseFloat(document.getElementById('tb').value) || 165;
+  const usia = parseFloat(document.getElementById('usia').value) || 30;
+  const jk = document.getElementById('jk').value;
+  const af = parseFloat(document.getElementById('aktivitas').value);
+  let bmr = jk === 'pria'
+    ? 88.362 + (13.397 * bb) + (4.799 * tb) - (5.677 * usia)
+    : 447.593 + (9.247 * bb) + (3.098 * tb) - (4.330 * usia);
+  tdee = Math.round(bmr * af);
+  document.getElementById('m-tdee').textContent = tdee.toLocaleString('id-ID');
+  updateKaloriDisplay();
+}
+
+function updateKaloriDisplay() {
+  const total = foods.reduce((a, f) => a + f.kal, 0);
+  const sisa = tdee - total;
+  const pct = Math.min(Math.round((total / tdee) * 100), 100);
+  document.getElementById('m-total').textContent = total.toLocaleString('id-ID');
+  document.getElementById('m-sisa').textContent = sisa.toLocaleString('id-ID');
+  document.getElementById('pct-label').textContent = pct + '%';
+  const bar = document.getElementById('kal-progress');
+  bar.style.width = pct + '%';
+  bar.style.background = pct > 110 ? '#e53935' : pct > 90 ? '#fb8c00' : '#4caf50';
+  const totalGula = foods.reduce((a, f) => a + (f.gula || 0), 0);
+  document.getElementById('total-gula').textContent = totalGula + ' g';
+  const sg = document.getElementById('status-gula');
+  if (totalGula > 50) { sg.className = 'badge badge-danger'; sg.textContent = 'Berlebih'; }
+  else if (totalGula > 25) { sg.className = 'badge badge-warning'; sg.textContent = 'Perhatian'; }
+  else { sg.className = 'badge badge-normal'; sg.textContent = 'Aman'; }
+}
+
+function tambahMakanan() {
+  const nama = document.getElementById('nama-makanan').value.trim();
+  const kal = parseFloat(document.getElementById('kal-makanan').value);
+  if (!nama || !kal) { alert('Isi nama makanan dan kalori dulu ya!'); return; }
+  const gula = parseFloat(document.getElementById('gula-makanan').value) || 0;
+  foods.push({ nama, kal: Math.round(kal), gula: Math.round(gula) });
+  document.getElementById('nama-makanan').value = '';
+  document.getElementById('kal-makanan').value = '';
+  document.getElementById('gula-makanan').value = '';
+  document.getElementById('karbo').value = '';
+  renderFoods();
+  updateKaloriDisplay();
+}
+
+function renderFoods() {
+  const el = document.getElementById('food-list');
+  if (foods.length === 0) { el.innerHTML = '<div class="empty">Belum ada makanan ditambahkan</div>'; return; }
+  el.innerHTML = foods.map((f, i) => `
+    <div class="food-item">
+      <span>${f.nama}</span>
+      <span style="display:flex;align-items:center;gap:10px;">
+        <span style="color:#888;font-size:12px;">${f.kal} kkal${f.gula ? ' · ' + f.gula + 'g gula' : ''}</span>
+        <button class="food-del" onclick="hapusMakanan(${i})">×</button>
+      </span>
+    </div>`).join('');
+}
+
+function hapusMakanan(i) { foods.splice(i, 1); renderFoods(); updateKaloriDisplay(); }
+
+function hitungBMI() {
+  const bb = parseFloat(document.getElementById('r-bb').value);
+  const tb = parseFloat(document.getElementById('r-tb').value);
+  if (bb && tb) document.getElementById('r-bmi').value = (bb / ((tb / 100) ** 2)).toFixed(1);
+}
+
+function hitungRisiko() {
+  let skor = 0;
+  const gdp = parseFloat(document.getElementById('gdp').value) || 0;
+  const gd2pp = parseFloat(document.getElementById('gd2pp').value) || 0;
+  const bb = parseFloat(document.getElementById('r-bb').value) || 0;
+  const tb = parseFloat(document.getElementById('r-tb').value) || 0;
+  const usia = parseFloat(document.getElementById('r-usia').value) || 0;
+  let gulaStatus = '';
+  if (gdp >= 126 || gd2pp >= 200) { skor += 40; gulaStatus = 'diabetes'; }
+  else if (gdp >= 100 || gd2pp >= 140) { skor += 25; gulaStatus = 'prediabet'; }
+  else if (gdp > 0 || gd2pp > 0) gulaStatus = 'normal';
+  if (bb && tb) { const bmi = bb / ((tb / 100) ** 2); if (bmi >= 30) skor += 20; else if (bmi >= 25) skor += 12; else if (bmi >= 23) skor += 6; }
+  if (usia >= 45) skor += 10; else if (usia >= 35) skor += 5;
+  skor += ['g1','g2','g3','g4','g5','g6','g7'].filter(id => document.getElementById(id).checked).length * 4;
+  skor += ['r1','r2','r3','r4'].filter(id => document.getElementById(id).checked).length * 5;
+  skor = Math.min(skor, 100);
+  let label, badgeClass, icon, tips;
+  if (gulaStatus === 'diabetes' || skor >= 70) {
+    label = 'Risiko Tinggi — Segera konsultasi dokter'; badgeClass = 'badge-danger'; icon = '🔴';
+    tips = ['Segera lakukan pemeriksaan ke dokter atau puskesmas terdekat','Periksa HbA1c untuk konfirmasi diagnosis','Kurangi gula dan karbohidrat sederhana secara drastis','Mulai olahraga teratur minimal 30 menit/hari'];
+  } else if (gulaStatus === 'prediabet' || skor >= 40) {
+    label = 'Risiko Sedang — Pre-diabetes mungkin'; badgeClass = 'badge-warning'; icon = '🟡';
+    tips = ['Lakukan tes gula darah lengkap di laboratorium','Kurangi gula harian di bawah 25 gram','Perbanyak aktivitas fisik — jalan kaki 30 menit/hari','Pre-diabetes masih bisa dibalik dengan perubahan gaya hidup'];
+  } else {
+    label = 'Risiko Rendah — Tetap jaga gaya hidup'; badgeClass = 'badge-normal'; icon = '🟢';
+    tips = ['Tetap pertahankan pola makan sehat','Cek gula darah minimal 1x setahun','Jaga berat badan ideal dan aktif bergerak','Hindari konsumsi minuman manis berlebihan'];
+  }
+  document.getElementById('r-icon').textContent = icon;
+  document.getElementById('r-skor').textContent = skor;
+  document.getElementById('r-label').textContent = label;
+  const badge = document.getElementById('r-badge');
+  badge.className = 'badge ' + badgeClass;
+  badge.textContent = badgeClass === 'badge-danger' ? 'Perlu tindakan' : badgeClass === 'badge-warning' ? 'Waspada' : 'Aman';
+  document.getElementById('r-tips').innerHTML = '<div style="font-size:13px;font-weight:500;color:#888;margin-bottom:8px;">Rekomendasi:</div>' +
+    tips.map(t => `<div class="tip">→ <span>${t}</span></div>`).join('');
+  const el = document.getElementById('hasil-risiko');
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+hitungKebutuhan();
+</script>
+</body>
+</html>
